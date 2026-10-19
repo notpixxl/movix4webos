@@ -41,6 +41,7 @@ jobs:
           
           # Copy app files
           cp appinfo.json index.html app.js style.css tv-styles.css tv-adapter.js icon.png largeIcon.png movix.svg staging/data/usr/palm/applications/${APP_ID}/
+          cp -r webOSUserScripts staging/data/usr/palm/applications/${APP_ID}/
           
           tar -czf staging/control.tar.gz -C staging/control control
           tar -czf staging/data.tar.gz -C staging/data usr

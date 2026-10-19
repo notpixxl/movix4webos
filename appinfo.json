@@ -1,6 +1,6 @@
 {
   "id": "com.movix.client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "vendor": "Movix Community",
   "type": "web",
   "main": "index.html",
@@ -15,7 +15,12 @@
   "useAudioOutput": true,
   "handlesRelaunch": true,
   "checkScreenSaver": true,
-  "appDescription": "Client de streaming Movix pour téléviseurs LG webOS avec résolution dynamique d'instance.",
+  "trustLevel": "netcast",
+  "privilegedJail": true,
+  "vendorExtension": {
+    "allowCrossDomain": true
+  },
+  "appDescription": "Client de streaming Movix pour téléviseurs LG webOS avec résolution dynamique d'instance, bloqueur de pubs et support Magic Remote.",
   "category": "entertainment",
   "bgColor": "#050608"
 }

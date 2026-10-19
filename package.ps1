@@ -75,6 +75,11 @@ Description: Movix TV streaming client for webOS
             }
         }
 
+        $userScriptsDir = Join-Path $PSScriptRoot "webOSUserScripts"
+        if (Test-Path $userScriptsDir) {
+            Copy-Item -Recurse $userScriptsDir -Destination $appDest
+        }
+
         # 1. Compression control.tar.gz
         & tar.exe -czf "$staging\control.tar.gz" -C "$staging\control" control
         # 2. Compression data.tar.gz

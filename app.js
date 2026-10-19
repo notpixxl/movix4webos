@@ -1,6 +1,6 @@
 /**
- * Movix TV Client - Logique d'orchestration webOS
- * Résolution dynamique de miroir, gestion des modes et télécommande
+ * Movix TV Client - Logique de lancement instantané webOS
+ * Résolution dynamique de miroir et redirection automatique immédiate
  */
 
 (function () {
@@ -15,10 +15,8 @@
 
   var state = {
     resolvedUrl: localStorage.getItem('movix_active_url') || DEFAULT_FALLBACKS[0],
-    displayMode: localStorage.getItem('movix_display_mode') || 'direct', // 'direct' ou 'wrapper'
-    countdownTimer: null,
-    countdownSeconds: 3,
-    isResolving: true
+    displayMode: localStorage.getItem('movix_display_mode') || 'direct',
+    isCancelled: false
   };
 
   // Éléments DOM
@@ -26,10 +24,6 @@
     statusText: document.getElementById('status-text'),
     progressBar: document.getElementById('progress-bar'),
     urlDisplay: document.getElementById('target-url-display'),
-    spinner: document.getElementById('loader-spinner'),
-    btnLaunch: document.getElementById('btn-launch-direct'),
-    btnSwitchMode: document.getElementById('btn-switch-mode'),
-    btnSettings: document.getElementById('btn-settings'),
     settingsModal: document.getElementById('settings-modal'),
     customUrlInput: document.getElementById('custom-url-input'),
     modeSelect: document.getElementById('mode-select'),
@@ -56,13 +50,15 @@
   }
 
   /**
-   * Résolution dynamique de l'instance Movix active
+   * Résolution et lancement automatique immédiat
    */
-  async function resolveActiveInstance() {
-    updateStatus('Interrogation de movix.online...', 30, state.resolvedUrl);
+  async function resolveAndAutoLaunch() {
+    var cached = state.resolvedUrl;
+    updateStatus('Connexion à ' + cached.replace('https://', '') + '...', 60, cached);
 
+    // Tentative rapide de vérification de miroir frais (timeout court 800ms)
     var controller = new AbortController();
-    var timeoutId = setTimeout(function () { controller.abort(); }, 4000);
+    var timeoutId = setTimeout(function () { controller.abort(); }, 800);
 
     try {
       var response = await fetch(RESOLVER_URL, {
@@ -74,105 +70,62 @@
 
       if (response.ok) {
         var html = await response.text();
-        updateStatus('Analyse des redirections officielles...', 65);
-
-        // 1. Chercher dans le JSON-LD ou le texte "active est movix.xyz"
         var match = html.match(/(?:active\s+est\s+<a[^>]*href=["']?(https?:\/\/[a-z0-9\-.]+)["']?|active\s+est\s+([a-z0-9\-.]+\.[a-z]{2,8})|https:\/\/(movix\.[a-z0-9\-]+))/i);
-        var detectedDomain = null;
-
         if (match) {
-          detectedDomain = match[1] || match[2] || match[3];
+          var detectedDomain = match[1] || match[2] || match[3];
           if (detectedDomain && !detectedDomain.startsWith('http')) {
             detectedDomain = 'https://' + detectedDomain;
           }
           if (detectedDomain && detectedDomain.endsWith('/')) {
             detectedDomain = detectedDomain.slice(0, -1);
           }
-        }
-
-        if (detectedDomain && detectedDomain.indexOf('movix') !== -1) {
-          state.resolvedUrl = detectedDomain;
-          localStorage.setItem('movix_active_url', detectedDomain);
-          console.log('[MovixTV] Nouvelle instance officielle résolue :', detectedDomain);
+          if (detectedDomain && detectedDomain.indexOf('movix') !== -1) {
+            state.resolvedUrl = detectedDomain;
+            localStorage.setItem('movix_active_url', detectedDomain);
+          }
         }
       }
     } catch (err) {
-      console.warn('[MovixTV] movix.online non joignable directement, miroir par défaut utilisé :', err);
+      // Ignorer : le miroir par défaut / cache est prêt immédiatement
     }
 
-    state.isResolving = false;
-    updateStatus('Instance prête !', 100, state.resolvedUrl);
-    startLaunchCountdown();
+    // Si l'utilisateur n'a pas ouvert le modal de réglages pendant les 800ms, lancer tout de suite
+    if (!state.isCancelled) {
+      updateStatus('Chargement du catalogue...', 100, state.resolvedUrl);
+      setTimeout(launch, 150);
+    }
   }
 
-  /**
-   * Compte à rebours avant lancement automatique
-   */
-  function startLaunchCountdown() {
-    if (state.countdownTimer) clearInterval(state.countdownTimer);
-
-    dom.btnLaunch.focus();
-
-    state.countdownTimer = setInterval(function () {
-      if (dom.settingsModal.style.display === 'flex') return; // Pause si modal ouvert
-
-      state.countdownSeconds--;
-      if (state.countdownSeconds > 0) {
-        dom.btnLaunch.innerHTML = '<span>▶ Lancer Maintenant (' + state.countdownSeconds + 's)</span>';
-      } else {
-        clearInterval(state.countdownTimer);
-        launch();
-      }
-    }, 1000);
-  }
-
-  /**
-   * Lancement du client selon le mode configuré
-   */
   function launch() {
-    if (state.countdownTimer) clearInterval(state.countdownTimer);
-
     var targetUrl = state.resolvedUrl;
-    console.log('[MovixTV] Lancement vers :', targetUrl, 'Mode :', state.displayMode);
+    console.log('[MovixTV] Lancement automatique vers :', targetUrl);
 
     if (state.displayMode === 'direct') {
-      // MODE PLEIN ÉCRAN DIRECT (Recommandé) :
-      // Navigue directement vers l'instance Movix active
-      updateStatus('Chargement du streaming plein écran...', 100, targetUrl);
       window.location.replace(targetUrl);
     } else {
-      // MODE WRAPPER IFRAME :
-      dom.splashContainer.style.display = 'none';
-      dom.iframeContainer.style.display = 'block';
-      dom.osdUrl.textContent = targetUrl;
-      dom.appFrame.src = targetUrl;
-
-      // Afficher brièvement l'OSD en haut
-      showOsdTemporarily();
+      if (dom.splashContainer) dom.splashContainer.style.display = 'none';
+      if (dom.iframeContainer) {
+        dom.iframeContainer.style.display = 'block';
+        dom.osdUrl.textContent = targetUrl;
+        dom.appFrame.src = targetUrl;
+      }
     }
   }
 
-  function showOsdTemporarily() {
-    dom.osdBar.classList.add('visible');
-    setTimeout(function () {
-      dom.osdBar.classList.remove('visible');
-    }, 4000);
-  }
-
-  /**
-   * Gestion des paramètres
-   */
   function openSettings() {
-    if (state.countdownTimer) clearInterval(state.countdownTimer);
-    dom.customUrlInput.value = state.resolvedUrl;
-    dom.modeSelect.value = state.displayMode;
-    dom.settingsModal.style.display = 'flex';
-    dom.customUrlInput.focus();
+    state.isCancelled = true;
+    if (dom.customUrlInput) dom.customUrlInput.value = state.resolvedUrl;
+    if (dom.modeSelect) dom.modeSelect.value = state.displayMode;
+    if (dom.settingsModal) {
+      dom.settingsModal.style.display = 'flex';
+      dom.customUrlInput.focus();
+    }
   }
 
   function closeSettings() {
-    dom.settingsModal.style.display = 'none';
-    dom.btnLaunch.focus();
+    if (dom.settingsModal) dom.settingsModal.style.display = 'none';
+    state.isCancelled = false;
+    launch();
   }
 
   function saveSettings() {
@@ -184,83 +137,33 @@
       state.resolvedUrl = newUrl;
       localStorage.setItem('movix_active_url', newUrl);
     }
-
     state.displayMode = dom.modeSelect.value;
     localStorage.setItem('movix_display_mode', state.displayMode);
-
     closeSettings();
-    launch();
   }
 
-  // Écouteurs d'événements
   function bindUIEvents() {
-    dom.btnLaunch.addEventListener('click', function () {
-      launch();
-    });
+    var btnLaunch = document.getElementById('btn-launch-direct');
+    if (btnLaunch) btnLaunch.addEventListener('click', launch);
 
-    dom.btnSwitchMode.addEventListener('click', function () {
-      state.displayMode = (state.displayMode === 'direct') ? 'wrapper' : 'direct';
-      localStorage.setItem('movix_display_mode', state.displayMode);
-      dom.btnSwitchMode.querySelector('span').textContent = 
-        (state.displayMode === 'direct') ? '☷ Mode Wrapper' : '▣ Mode Plein Écran';
-    });
+    var btnSettings = document.getElementById('btn-settings');
+    if (btnSettings) btnSettings.addEventListener('click', openSettings);
 
-    dom.btnSettings.addEventListener('click', openSettings);
-    dom.btnCancelSettings.addEventListener('click', closeSettings);
-    dom.btnSaveSettings.addEventListener('click', saveSettings);
-
-    // OSD wrapper buttons
-    if (dom.btnOsdFullscreen) {
-      dom.btnOsdFullscreen.addEventListener('click', function () {
-        if (!document.fullscreenElement) {
-          document.documentElement.requestFullscreen();
-        } else {
-          document.exitFullscreen();
-        }
-      });
-    }
-
-    if (dom.btnOsdReload) {
-      dom.btnOsdReload.addEventListener('click', function () {
-        dom.appFrame.src = state.resolvedUrl;
-      });
-    }
-
-    if (dom.btnOsdHome) {
-      dom.btnOsdHome.addEventListener('click', function () {
-        dom.iframeContainer.style.display = 'none';
-        dom.splashContainer.style.display = 'flex';
-        state.countdownSeconds = 5;
-        startLaunchCountdown();
-      });
-    }
-
-    // Détection souris/pointeur en haut de l'écran pour OSD
-    window.addEventListener('mousemove', function (e) {
-      if (dom.iframeContainer.style.display === 'block') {
-        if (e.clientY < 50) {
-          dom.osdBar.classList.add('visible');
-        } else if (e.clientY > 100) {
-          dom.osdBar.classList.remove('visible');
-        }
-      }
-    });
+    if (dom.btnCancelSettings) dom.btnCancelSettings.addEventListener('click', closeSettings);
+    if (dom.btnSaveSettings) dom.btnSaveSettings.addEventListener('click', saveSettings);
 
     // Raccourci télécommande : Touche Jaune (405) pour paramètres
     window.addEventListener('keydown', function (e) {
       var key = e.keyCode || e.which;
       if (key === 405) { // Yellow button
         openSettings();
-      } else if (key === 403) { // Red button
-        resolveActiveInstance();
       }
     });
   }
 
-  // Initialisation au chargement de la page
   window.addEventListener('DOMContentLoaded', function () {
     bindUIEvents();
-    resolveActiveInstance();
+    resolveAndAutoLaunch();
   });
 
 })();
