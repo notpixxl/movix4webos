@@ -22,7 +22,7 @@
         "rootRequired": false,
         "ipkUrl": "https://raw.githubusercontent.com/notpixxl/movix4webos/main/com.movix.client_1.0.4_all.ipk",
         "ipkHash": {
-          "sha256": "a6d9f8679fc136ee720cc36b2e60d3a1730315832a9a98d794813f358de7daf3"
+          "sha256": "98161a424a188fe61b4bb896c3cdd9bfda80d60e756802944d4bf75743880c01"
         }
       }
     }
