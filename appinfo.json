@@ -1,6 +1,6 @@
 {
   "id": "com.movix.client",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "vendor": "Movix Community",
   "type": "web",
   "main": "index.html",
@@ -17,6 +17,7 @@
   "checkScreenSaver": true,
   "trustLevel": "netcast",
   "privilegedJail": true,
+  "disableBackHistoryAPI": true,
   "vendorExtension": {
     "allowCrossDomain": true
   },

@@ -27,6 +27,9 @@
   var TvAdapter = {
     init: function () {
       console.log('[MovixTV] Initialisation du gestionnaire de télécommande LG webOS');
+      try {
+        window.close = function () {};
+      } catch (e) {}
       this.bindKeyEvents();
       this.enableSpatialNavigation();
     },
@@ -36,7 +39,8 @@
       window.addEventListener('keydown', function (e) {
         var keyCode = e.keyCode || e.which;
 
-        var isBackKey = (keyCode === TV_KEYS.BACK || e.key === 'GoBack' || keyCode === 27);
+        // Touche Retour physique Magic Remote (461) ou GoBack (NE PAS inclure Escape 27 pour éviter les crashs sur lecteur vidéo)
+        var isBackKey = (keyCode === TV_KEYS.BACK || e.key === 'GoBack');
 
         if (isBackKey) {
           e.preventDefault();
@@ -96,13 +100,11 @@
       if (window.history && window.history.length > 1) {
         window.history.back();
       } else {
-        // En haut de l'arbre : quitter l'application webOS
+        // En haut de l'arbre : quitter l'application webOS proprement
         if (window.webOS && window.webOS.platformBack) {
           window.webOS.platformBack();
         } else if (window.PalmSystem && window.PalmSystem.platformBack) {
           window.PalmSystem.platformBack();
-        } else if (window.close) {
-          window.close();
         }
       }
     },
