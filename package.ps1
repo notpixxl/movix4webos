@@ -13,8 +13,14 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host " Packaging Movix TV pour LG webOS" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 
-$appId = "com.movix.client"
-$version = "1.0.0"
+$appInfoPath = Join-Path $PSScriptRoot "appinfo.json"
+if (-not (Test-Path $appInfoPath)) {
+    Write-Error "appinfo.json introuvable."
+    exit 1
+}
+$appInfo = Get-Content $appInfoPath -Raw | ConvertFrom-Json
+$appId = $appInfo.id
+$version = $appInfo.version
 $ipkName = "${appId}_${version}_all.ipk"
 $ipkPath = Join-Path $OutputDir $ipkName
 
@@ -146,10 +152,25 @@ Write-Host "----------------------------------------" -ForegroundColor Cyan
 # 3. Mise à jour automatique des flux de repository locaux
 $manifestFile = Join-Path $PSScriptRoot "manifest.json"
 $appsFile = Join-Path $PSScriptRoot "apps.json"
+$packageJsonFile = Join-Path $PSScriptRoot "package.json"
+$webosbrewFile = Join-Path $PSScriptRoot "webosbrew.json"
 
 if (Test-Path $manifestFile) {
-    (Get-Content $manifestFile) -replace '"sha256":\s*"[^"]*"', "`"sha256`": `"$sha256`"" | Set-Content $manifestFile
+    (Get-Content $manifestFile) `
+        -replace '"version":\s*"[^"]*"', "`"version`": `"$version`"" `
+        -replace '"ipkUrl":\s*"[^"]*"', "`"ipkUrl`": `"https://raw.githubusercontent.com/notpixxl/movix4webos/main/$ipkName`"" `
+        -replace '"sha256":\s*"[^"]*"', "`"sha256`": `"$sha256`"" | Set-Content $manifestFile
 }
 if (Test-Path $appsFile) {
-    (Get-Content $appsFile) -replace '"sha256":\s*"[^"]*"', "`"sha256`": `"$sha256`"" | Set-Content $appsFile
+    (Get-Content $appsFile) `
+        -replace '"version":\s*"[^"]*"', "`"version`": `"$version`"" `
+        -replace '"ipkUrl":\s*"[^"]*"', "`"ipkUrl`": `"https://raw.githubusercontent.com/notpixxl/movix4webos/main/$ipkName`"" `
+        -replace '"sha256":\s*"[^"]*"', "`"sha256`": `"$sha256`"" | Set-Content $appsFile
 }
+if (Test-Path $packageJsonFile) {
+    (Get-Content $packageJsonFile) -replace '"version":\s*"[^"]*"', "`"version`": `"$version`"" | Set-Content $packageJsonFile
+}
+if (Test-Path $webosbrewFile) {
+    (Get-Content $webosbrewFile) -replace '"version":\s*"[^"]*"', "`"version`": `"$version`"" | Set-Content $webosbrewFile
+}
+

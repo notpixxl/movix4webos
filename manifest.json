@@ -5,10 +5,10 @@
   "title": "Movix TV",
   "appDescription": "Client de streaming Movix pour téléviseurs LG webOS avec résolution dynamique d'instance, bloqueur de pubs et support Magic Remote.",
   "iconUri": "https://raw.githubusercontent.com/notpixxl/movix4webos/main/largeIcon.png",
-  "sourceUrl": "https://github.com/notpixxl/movix4webos
+  "sourceUrl": "https://github.com/notpixxl/movix4webos",
   "rootRequired": false,
-  "ipkUrl": "https://raw.githubusercontent.com/notpixxl/movix4webos/main/com.movix.client_1.0.0_all.ipk",
+  "ipkUrl": "https://raw.githubusercontent.com/notpixxl/movix4webos/main/com.movix.client_1.0.3_all.ipk",
   "ipkHash": {
-    "sha256": "03de19196a3795e95a400eff829264f52ee07afe441a175d586537a6d1e5bff6"
+    "sha256": "4093d0b2f4978bd1bc57395673b2aabf3fd0ee75e0982d9634708a45d7fbe2b7"
   }
 }

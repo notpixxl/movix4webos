@@ -1,6 +1,6 @@
 {
   "id": "com.movix.client",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "type": "web",
   "title": "Movix TV",
   "appDescription": "Client de streaming communautaire pour Movix avec résolution dynamique des miroirs officiels et optimisation pour télécommande LG Magic Remote.",

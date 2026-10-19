@@ -20,8 +20,8 @@ jobs:
 
       - name: Build webOS IPK Package
         run: |
-          APP_ID="com.movix.client"
-          VERSION="1.0.0"
+          APP_ID=$(node -p "require('./appinfo.json').id")
+          VERSION=$(node -p "require('./appinfo.json').version")
           IPK_NAME="${APP_ID}_${VERSION}_all.ipk"
           
           mkdir -p staging/control
@@ -29,15 +29,15 @@ jobs:
           
           printf "2.0\n" > staging/debian-binary
           
-          cat << 'EOF' > staging/control/control
-          Package: com.movix.client
-          Version: 1.0.0
-          Section: misc
-          Priority: optional
-          Architecture: all
-          Maintainer: Movix Community
-          Description: Movix TV streaming client for webOS
-          EOF
+          cat << EOF > staging/control/control
+Package: ${APP_ID}
+Version: ${VERSION}
+Section: misc
+Priority: optional
+Architecture: all
+Maintainer: Movix Community
+Description: Movix TV streaming client for webOS
+EOF
           
           # Copy app files
           cp appinfo.json index.html app.js style.css tv-styles.css tv-adapter.js icon.png largeIcon.png movix.svg staging/data/usr/palm/applications/${APP_ID}/
@@ -52,10 +52,12 @@ jobs:
           echo "IPK_SHA256=${SHA256}" >> $GITHUB_ENV
           echo "IPK_FILENAME=${IPK_NAME}" >> $GITHUB_ENV
           
-          # Update apps.json and manifest.json with repo details
+          # Update apps.json, manifest.json and webosbrew.json
           REPO="${{ github.repository }}"
           sed -i -E "s|(raw\.githubusercontent\.com/)[^/]+/[^/]+|\1${REPO}|g" apps.json manifest.json
           sed -i -E "s|(github\.com/)[^/]+/[^/]+|\1${REPO}|g" apps.json manifest.json webosbrew.json
+          sed -i -E "s|\"version\": \"[^\"]*\"|\"version\": \"${VERSION}\"|g" apps.json manifest.json webosbrew.json
+          sed -i -E "s|/main/[^\"']+\.ipk|/main/${IPK_NAME}|g" apps.json manifest.json
           sed -i "s|\"sha256\": \"[^\"]*\"|\"sha256\": \"${SHA256}\"|g" apps.json manifest.json
 
       - name: Commit updated repo manifests

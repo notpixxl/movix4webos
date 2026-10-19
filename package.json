@@ -1,6 +1,6 @@
 {
   "name": "movix-webos",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Movix TV client for LG webOS",
   "scripts": {
     "package": "powershell -ExecutionPolicy Bypass -File ./package.ps1"

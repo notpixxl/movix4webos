@@ -49,7 +49,7 @@ movix-webos/
 
 1. Téléchargez et ouvrez **webOS Dev Manager** sur votre ordinateur.
 2. Connectez-vous à votre téléviseur LG.
-3. Cliquez sur **Install** (ou glissez-déposez le fichier [`com.movix.client_1.0.0_all.ipk`](com.movix.client_1.0.0_all.ipk) dans la fenêtre).
+3. Cliquez sur **Install** (ou glissez-déposez le fichier [`com.movix.client_1.0.3_all.ipk`](com.movix.client_1.0.3_all.ipk) dans la fenêtre).
 4. L'application s'installe et l'icône **Movix TV** apparaît instantanément dans la barre de lancement de votre téléviseur.
 
 ---
