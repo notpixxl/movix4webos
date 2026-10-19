@@ -44,7 +44,7 @@ jobs:
           
           tar -czf staging/control.tar.gz -C staging/control control
           tar -czf staging/data.tar.gz -C staging/data usr
-          tar -czf ${IPK_NAME} -C staging debian-binary control.tar.gz data.tar.gz
+          (cd staging && ar -qc ../${IPK_NAME} debian-binary control.tar.gz data.tar.gz)
           
           # Calculate SHA256
           SHA256=$(sha256sum ${IPK_NAME} | awk '{print $1}')

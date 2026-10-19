@@ -81,13 +81,13 @@ jobs:
           
           tar -czf staging/control.tar.gz -C staging/control control
           tar -czf staging/data.tar.gz -C staging/data usr
-          tar -czf ${IPK_NAME} -C staging debian-binary control.tar.gz data.tar.gz
+          (cd staging && ar -qc ../${IPK_NAME} debian-binary control.tar.gz data.tar.gz)
           
           echo "Verifying IPK integrity..."
           test -f ${IPK_NAME} || exit 1
-          tar -ztf ${IPK_NAME} | grep debian-binary || exit 1
-          tar -ztf ${IPK_NAME} | grep control.tar.gz || exit 1
-          tar -ztf ${IPK_NAME} | grep data.tar.gz || exit 1
+          ar -t ${IPK_NAME} | grep debian-binary || exit 1
+          ar -t ${IPK_NAME} | grep control.tar.gz || exit 1
+          ar -t ${IPK_NAME} | grep data.tar.gz || exit 1
           
           SHA256=$(sha256sum ${IPK_NAME} | awk '{print $1}')
           echo "✓ IPK successfully generated: ${IPK_NAME} (${SHA256})"

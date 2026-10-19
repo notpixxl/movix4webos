@@ -1,6 +1,6 @@
 # ====================================================================
 # Movix TV - Script de packaging IPK pour LG webOS
-# Compatible avec webOS Dev Manager et Homebrew Channel
+# Produit une archive Unix ar (Debian standard) requise par webOS
 # ====================================================================
 
 param (
@@ -25,7 +25,7 @@ if ($aresPackage) {
     Write-Host "[+] Outil officiel ares-package détecté. Compilation en cours..." -ForegroundColor Green
     & ares-package $PSScriptRoot -o $OutputDir
 } else {
-    Write-Host "[i] ares-package non présent, utilisation de tar.exe..." -ForegroundColor Yellow
+    Write-Host "[i] Assemblage de l'archive Debian ar autonome..." -ForegroundColor Yellow
     $tar = Get-Command tar.exe -ErrorAction SilentlyContinue
     if (-not $tar) {
         Write-Error "tar.exe introuvable dans System32. Impossible de générer le paquet IPK."
@@ -40,8 +40,10 @@ if ($aresPackage) {
         $appDest = "$staging\data\usr\palm\applications\$appId"
         New-Item -ItemType Directory -Path $appDest | Out-Null
 
+        # debian-binary (2.0\n)
         Set-Content -Path "$staging\debian-binary" -Value "2.0`n" -NoNewline
 
+        # control
         $controlText = @"
 Package: $appId
 Version: $version
@@ -53,6 +55,7 @@ Description: Movix TV streaming client for webOS
 "@
         Set-Content -Path "$staging\control\control" -Value $controlText
 
+        # Fichiers de l'application
         $appFiles = @(
             "appinfo.json",
             "index.html",
@@ -72,9 +75,53 @@ Description: Movix TV streaming client for webOS
             }
         }
 
+        # 1. Compression control.tar.gz
         & tar.exe -czf "$staging\control.tar.gz" -C "$staging\control" control
+        # 2. Compression data.tar.gz
         & tar.exe -czf "$staging\data.tar.gz" -C "$staging\data" usr
-        & tar.exe -czf $ipkPath -C "$staging" debian-binary control.tar.gz data.tar.gz
+
+        # 3. Assemblage du conteneur Unix "ar" (standard Debian requis par webOS Busybox ar)
+        $stream = [System.IO.File]::Create($ipkPath)
+        $writer = New-Object System.IO.BinaryWriter($stream)
+
+        # En-tête global ar
+        $globalHeader = [System.Text.Encoding]::ASCII.GetBytes("!<arch>`n")
+        $writer.Write($globalHeader, 0, $globalHeader.Length)
+
+        $memberFiles = @(
+            (Join-Path $staging "debian-binary"),
+            (Join-Path $staging "control.tar.gz"),
+            (Join-Path $staging "data.tar.gz")
+        )
+
+        foreach ($filePath in $memberFiles) {
+            $info = Get-Item $filePath
+            $nameWithSlash = $info.Name + "/"
+            $nameField = $nameWithSlash.PadRight(16)
+            $dateField = ("0").PadRight(12)
+            $uidField  = ("0").PadRight(6)
+            $gidField  = ("0").PadRight(6)
+            $modeField = ("100644").PadRight(8)
+            
+            $fileBytes = [System.IO.File]::ReadAllBytes($filePath)
+            $sizeField = ($fileBytes.Length.ToString()).PadRight(10)
+            $endMagic = [byte[]]@(0x60, 0x0A) # `\n
+
+            $headerText = "$nameField$dateField$uidField$gidField$modeField$sizeField"
+            $headerBytes = [System.Text.Encoding]::ASCII.GetBytes($headerText)
+            
+            $writer.Write($headerBytes, 0, $headerBytes.Length)
+            $writer.Write($endMagic, 0, 2)
+            $writer.Write($fileBytes, 0, $fileBytes.Length)
+
+            # Alignement pair obligatoire dans le format ar
+            if ($fileBytes.Length % 2 -ne 0) {
+                $writer.Write([byte]0x0A)
+            }
+        }
+
+        $writer.Close()
+        $stream.Close()
     } finally {
         if (Test-Path $staging) {
             Remove-Item -Recurse -Force $staging
@@ -86,7 +133,7 @@ Description: Movix TV streaming client for webOS
 $sha256 = (Get-FileHash -Algorithm SHA256 $ipkPath).Hash.ToLower()
 
 Write-Host "----------------------------------------" -ForegroundColor Cyan
-Write-Host "[OK] Paquet généré avec succès !" -ForegroundColor Green
+Write-Host "[OK] Paquet ar IPK généré avec succès !" -ForegroundColor Green
 Write-Host "     Fichier : $ipkName" -ForegroundColor White
 Write-Host "     SHA256  : $sha256" -ForegroundColor Gray
 Write-Host "----------------------------------------" -ForegroundColor Cyan
