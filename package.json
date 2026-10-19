@@ -1,0 +1,17 @@
+{
+  "name": "movix-webos",
+  "version": "1.0.0",
+  "description": "Movix TV client for LG webOS",
+  "scripts": {
+    "package": "powershell -ExecutionPolicy Bypass -File ./package.ps1"
+  },
+  "keywords": [
+    "webos",
+    "lg-tv",
+    "movix",
+    "streaming",
+    "homebrew"
+  ],
+  "author": "Movix Community",
+  "license": "CC-BY-NC-4.0"
+}

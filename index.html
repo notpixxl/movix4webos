@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Movix TV - LG webOS</title>
+  
+  <!-- Polices optimisées Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Consolas&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="tv-styles.css">
+</head>
+<body>
+
+  <!-- Éclairage d'ambiance OLED -->
+  <div class="ambient-bg"></div>
+
+  <!-- Écran de démarrage & Résolution -->
+  <main id="splash-container" role="main">
+    <div class="logo-wrapper">
+      <div class="radar-ring"></div>
+      <img src="movix.svg" alt="Movix Logo" class="brand-icon">
+    </div>
+
+    <h1 class="app-title">MOVIX TV</h1>
+    <p class="app-subtitle">Client de Streaming Haute Définition pour LG OLED</p>
+
+    <div class="status-card">
+      <div class="status-header">
+        <div class="spinner" id="loader-spinner"></div>
+        <div id="status-text">Interrogation de movix.online...</div>
+      </div>
+
+      <div class="progress-bar-container">
+        <div id="progress-bar"></div>
+      </div>
+
+      <div id="target-url-display">Résolution de l'instance en cours...</div>
+    </div>
+
+    <div class="actions-container">
+      <button id="btn-launch-direct" class="tv-button primary" tabindex="1">
+        <span>▶ Lancer Maintenant</span>
+      </button>
+      <button id="btn-switch-mode" class="tv-button" tabindex="2">
+        <span>☷ Mode Wrapper</span>
+      </button>
+      <button id="btn-settings" class="tv-button" tabindex="3">
+        <span>⚙ Paramètres</span>
+      </button>
+    </div>
+
+    <!-- Raccourcis Télécommande LG -->
+    <footer class="remote-hints">
+      <div class="hint-item"><span class="key-badge">OK</span> Entrer / Valider</div>
+      <div class="hint-item"><span class="key-badge">Retour</span> Quitter / Retour</div>
+      <div class="hint-item"><span class="key-badge">Rouge</span> Forcer Actualisation</div>
+      <div class="hint-item"><span class="key-badge">Jaune</span> Paramètres Miroirs</div>
+    </footer>
+  </main>
+
+  <!-- Modal Paramètres & Choix de Miroir -->
+  <section id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="modal-content">
+      <h2 id="settings-title" class="modal-title">Configuration Movix TV</h2>
+
+      <div class="setting-row">
+        <div class="setting-label">URL de l'Instance Movix</div>
+        <div class="setting-desc">L'URL active résolue automatiquement ou votre miroir personnalisé :</div>
+        <input type="text" id="custom-url-input" class="text-input" placeholder="https://movix.dog" tabindex="10">
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">Mode d'Affichage</div>
+        <div class="setting-desc">Plein Écran Natif (recommandé pour les flux HLS/DASH) ou Conteneur Wrapper :</div>
+        <select id="mode-select" class="text-input" tabindex="11">
+          <option value="direct">Plein Écran Direct (Performances & Compatibilité Maximales)</option>
+          <option value="wrapper">Conteneur Wrapper (Avec barre d'outils TV)</option>
+        </select>
+      </div>
+
+      <div class="actions-container" style="margin-top: 24px;">
+        <button id="btn-save-settings" class="tv-button primary" tabindex="12">Enregistrer & Démarrer</button>
+        <button id="btn-cancel-settings" class="tv-button" tabindex="13">Annuler</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Conteneur Iframe (Activé si mode Wrapper choisi) -->
+  <div id="iframe-container">
+    <header class="osd-bar" id="osd-bar">
+      <div class="osd-left">
+        <span class="osd-badge">MOVIX TV</span>
+        <span id="osd-current-url" style="color: var(--text-muted); font-size: 0.85rem;"></span>
+      </div>
+      <div class="osd-right">
+        <button class="osd-btn" id="btn-osd-fullscreen">Plein Écran</button>
+        <button class="osd-btn" id="btn-osd-reload">Recharger</button>
+        <button class="osd-btn" id="btn-osd-home">Accueil</button>
+      </div>
+    </header>
+    <iframe id="app-frame" allowfullscreen="true" allow="fullscreen; autoplay; encrypted-media; picture-in-picture" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-popups"></iframe>
+  </div>
+
+  <script src="tv-adapter.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+/* ====================================================================
+   Movix TV - Styles Spécifiques pour LG webOS (Magic Remote & D-Pad)
+   Amélioration du focus, de la lisibilité à 3 mètres et du curseur TV
+   ==================================================================== */
+
+/* 1. Amélioration du Focus Spatial (D-Pad & Tabulation) */
+:focus,
+:focus-visible,
+a:focus,
+button:focus,
+input:focus,
+select:focus,
+[tabindex]:focus,
+[role="button"]:focus {
+  outline: 3px solid #dc2626 !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 25px rgba(220, 38, 38, 0.8), 0 0 50px rgba(220, 38, 38, 0.4) !important;
+  transform: scale(1.05) translateZ(0) !important;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease-out !important;
+  z-index: 9999 !important;
+}
+
+/* 2. Optimisation du Survol au Curseur Gyroscopique (LG Magic Remote) */
+/* Sur grand écran OLED, le survol doit réagir avec un effet d'agrandissement doux */
+a:hover,
+button:hover,
+.movie-card:hover,
+.card:hover,
+[data-card]:hover,
+div[class*="Card"]:hover,
+div[class*="poster"]:hover {
+  transform: scale(1.06) translateZ(0) !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.85), 0 0 20px rgba(220, 38, 38, 0.5) !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease-out !important;
+  cursor: pointer !important;
+}
+
+/* 3. Masquage des Barres de Défilement (Navigation TV épurée) */
+* {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE/Edge/webOS */
+}
+
+*::-webkit-scrollbar {
+  display: none !important; /* Chromium 68 webOS */
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* 4. Agrandissement des Zones Clicables pour Télécommande */
+button,
+a,
+[role="button"],
+.interactive {
+  min-height: 48px !important;
+  min-width: 48px !important;
+}
+
+/* 5. Amélioration de la Lisibilité du Texte à Distance (10-foot UI) */
+body {
+  font-size: 18px !important;
+  line-height: 1.5 !important;
+}
+
+h1, .text-4xl, .text-5xl, .text-6xl {
+  font-size: 2.8rem !important;
+  letter-spacing: -0.02em !important;
+}
+
+h2, .text-3xl {
+  font-size: 2.2rem !important;
+}
+
+h3, .text-2xl {
+  font-size: 1.6rem !important;
+}
+
+/* 6. Lecteur Vidéo & Contrôles OSD plein écran */
+video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+/* Contrôles de lecture agrandis pour être facilement cliquables au pointeur LG */
+.vjs-control-bar,
+.player-controls,
+.art-controls {
+  padding: 12px 24px !important;
+  height: 64px !important;
+}
+
+.vjs-button,
+.player-button {
+  transform: scale(1.2) !important;
+  margin: 0 8px !important;
+}
+
+/* 7. Sous-titres à Contraste Élevé pour dalles OLED */
+video::cue,
+.subtitle,
+.vjs-text-track-cue {
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 1.8rem !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  text-shadow: 0 0 4px #000, 0 2px 8px rgba(0, 0, 0, 0.9) !important;
+  background-color: rgba(0, 0, 0, 0.65) !important;
+  border-radius: 6px !important;
+  padding: 4px 12px !important;
+}

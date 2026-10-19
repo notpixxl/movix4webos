@@ -1,0 +1,21 @@
+{
+  "id": "com.movix.client",
+  "version": "1.0.0",
+  "vendor": "Movix Community",
+  "type": "web",
+  "main": "index.html",
+  "title": "Movix TV",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "resolution": "1920x1080",
+  "requiredPermissions": [
+    "network"
+  ],
+  "supportGpuProcess": true,
+  "useAudioOutput": true,
+  "handlesRelaunch": true,
+  "checkScreenSaver": true,
+  "appDescription": "Client de streaming Movix pour téléviseurs LG webOS avec résolution dynamique d'instance.",
+  "category": "entertainment",
+  "bgColor": "#050608"
+}

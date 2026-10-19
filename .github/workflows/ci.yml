@@ -1,0 +1,93 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Lint & Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate JSON Files
+        run: |
+          echo "Validating JSON syntax..."
+          for f in appinfo.json package.json manifest.json apps.json webosbrew.json; do
+            node -e "JSON.parse(require('fs').readFileSync('$f', 'utf8'))"
+            echo "✓ $f is valid JSON"
+          done
+
+      - name: Validate JavaScript Files
+        run: |
+          echo "Checking JavaScript syntax..."
+          node --check app.js
+          echo "✓ app.js is syntactically valid"
+          node --check tv-adapter.js
+          echo "✓ tv-adapter.js is syntactically valid"
+
+      - name: Validate webOS Assets
+        run: |
+          echo "Checking required webOS assets..."
+          test -f appinfo.json || exit 1
+          test -f index.html || exit 1
+          test -f icon.png || exit 1
+          test -f largeIcon.png || exit 1
+          test -f movix.svg || exit 1
+          echo "✓ All core assets exist"
+
+  build-test:
+    name: Build & Test IPK
+    runs-on: ubuntu-latest
+    needs: validate
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Package IPK
+        run: |
+          APP_ID="com.movix.client"
+          VERSION="1.0.0"
+          IPK_NAME="${APP_ID}_${VERSION}_all.ipk"
+          
+          mkdir -p staging/control
+          mkdir -p staging/data/usr/palm/applications/${APP_ID}
+          
+          printf "2.0\n" > staging/debian-binary
+          
+          cat << 'EOF' > staging/control/control
+          Package: com.movix.client
+          Version: 1.0.0
+          Section: misc
+          Priority: optional
+          Architecture: all
+          Maintainer: Movix Community
+          Description: Movix TV streaming client for webOS
+          EOF
+          
+          cp appinfo.json index.html app.js style.css tv-styles.css tv-adapter.js icon.png largeIcon.png movix.svg staging/data/usr/palm/applications/${APP_ID}/
+          
+          tar -czf staging/control.tar.gz -C staging/control control
+          tar -czf staging/data.tar.gz -C staging/data usr
+          tar -czf ${IPK_NAME} -C staging debian-binary control.tar.gz data.tar.gz
+          
+          echo "Verifying IPK integrity..."
+          test -f ${IPK_NAME} || exit 1
+          tar -ztf ${IPK_NAME} | grep debian-binary || exit 1
+          tar -ztf ${IPK_NAME} | grep control.tar.gz || exit 1
+          tar -ztf ${IPK_NAME} | grep data.tar.gz || exit 1
+          
+          SHA256=$(sha256sum ${IPK_NAME} | awk '{print $1}')
+          echo "✓ IPK successfully generated: ${IPK_NAME} (${SHA256})"

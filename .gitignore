@@ -1,0 +1,16 @@
+# Fichiers de configuration locale / IP personnelle
+.tv_config
+.env
+*.local
+
+# Dossiers temporaires de packaging
+.ipk_staging/
+.staging/
+
+# Fichiers sources temporaires
+movix-orig.png
+
+# Système et logs
+*.log
+.DS_Store
+Thumbs.db
