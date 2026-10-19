@@ -47,8 +47,8 @@ jobs:
           
           # Update apps.json, manifest.json and webosbrew.json
           REPO="${{ github.repository }}"
-          sed -i -E "s|(raw\.githubusercontent\.com/)[^/]+/[^/]+|\1${REPO}|g" apps.json manifest.json
-          sed -i -E "s|(github\.com/)[^/]+/[^/]+|\1${REPO}|g" apps.json manifest.json webosbrew.json
+          sed -i -E "s|raw\.githubusercontent\.com/[a-zA-Z0-9_\-\.]+/[a-zA-Z0-9_\-\.]+|raw.githubusercontent.com/${REPO}|g" apps.json manifest.json
+          sed -i -E "s|https://github\.com/[a-zA-Z0-9_\-\.]+/[a-zA-Z0-9_\-\.]+|https://github.com/${REPO}|g" apps.json manifest.json webosbrew.json
           sed -i -E "s|\"version\": \"[^\"]*\"|\"version\": \"${VERSION}\"|g" apps.json manifest.json webosbrew.json
           sed -i -E "s|/main/[^\"']+\.ipk|/main/${IPK_NAME}|g" apps.json manifest.json
           sed -i "s|\"sha256\": \"[^\"]*\"|\"sha256\": \"${SHA256}\"|g" apps.json manifest.json
