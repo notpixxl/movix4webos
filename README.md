@@ -6,17 +6,27 @@
 
 <p align="center">
   <strong>Client webOS natif et optimisé pour la plateforme de streaming francophone Movix</strong><br>
-  Conçu pour les téléviseurs LG OLED, QNED, NanoCell et UHD (webOS 4.0 à 24+) avec prise en charge intégrale de la télécommande LG Magic Remote et des flèches directionnelles (D-Pad).
+  Développé et validé sur téléviseur <strong>LG OLED C9 (webOS 4.5)</strong> avec prise en charge de la télécommande <strong>LG Magic Remote</strong> et des flèches directionnelles (D-Pad).
 </p>
 
 <p align="center">
   <a href="https://github.com/notpixxl/movix4webos/releases/latest"><img src="https://img.shields.io/github/v/release/notpixxl/movix4webos?color=dc2626&label=Version" alt="Dernière Version"></a>
   <a href="https://github.com/notpixxl/movix4webos/actions"><img src="https://github.com/notpixxl/movix4webos/actions/workflows/release.yml/badge.svg" alt="Build Status"></a>
-  <img src="https://img.shields.io/badge/webOS-4.0%20%C3%A0%2024%2B-0083ca?logo=lg&logoColor=white" alt="Compatibilité webOS">
+  <img src="https://img.shields.io/badge/webOS-4.5%20(Test%C3%A9%20sur%20OLED%20C9)-0083ca?logo=lg&logoColor=white" alt="Testé sur webOS 4.5 (LG OLED C9)">
   <img src="https://img.shields.io/badge/Homebrew_Channel-Compatible-10b981?logo=apple&logoColor=white" alt="Homebrew Channel Ready">
   <img src="https://img.shields.io/badge/OLED-Optimized%20Dark%20UI-black" alt="OLED Optimized">
   <img src="https://img.shields.io/badge/Licence-CC--BY--NC--4.0-lightgrey.svg" alt="Licence">
 </p>
+
+---
+
+## 📺 Matériel Testé & Compatibilité
+
+> [!IMPORTANT]
+> **Périmètre des tests réels :**
+> - **Modèle testé et validé physiquement :** LG OLED C9 (`OLED55C9PLA`)
+> - **Version webOS testée :** webOS 4.5 (Firmware `05.40.xx`)
+> - **Autres modèles / versions webOS :** L'application utilise les APIs webOS standard et le moteur Chromium (compatible en théorie avec webOS 4.x+), mais **elle n'a pas été testée sur d'autres modèles ou versions récentes de webOS**. Vos retours d'expérience et rapports de compatibilité sont les bienvenus sur les [Issues GitHub](https://github.com/notpixxl/movix4webos/issues) !
 
 ---
 
