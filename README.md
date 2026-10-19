@@ -1,89 +1,121 @@
-# Movix TV pour LG webOS (OLED & TV Connectées)
+# Movix TV pour LG webOS (OLED & Smart TV)
 
-Client webOS pour la plateforme de streaming francophone **Movix**, optimisé pour les téléviseurs **LG webOS (webOS 4.5+ sur LG C9/B9/CX/C1/C2/C3/C4...)** avec prise en charge complète de la télécommande **LG Magic Remote** et des flèches directionnelles (D-Pad).
+<p align="center">
+  <img src="movix.svg" alt="Movix TV Logo" width="140" height="140">
+</p>
+
+<p align="center">
+  <strong>Client webOS natif et optimisé pour la plateforme de streaming francophone Movix</strong><br>
+  Conçu pour les téléviseurs LG OLED, QNED, NanoCell et UHD (webOS 4.0 à 24+) avec prise en charge intégrale de la télécommande LG Magic Remote et des flèches directionnelles (D-Pad).
+</p>
+
+<p align="center">
+  <a href="https://github.com/notpixxl/movix4webos/releases/latest"><img src="https://img.shields.io/github/v/release/notpixxl/movix4webos?color=dc2626&label=Version" alt="Dernière Version"></a>
+  <a href="https://github.com/notpixxl/movix4webos/actions"><img src="https://github.com/notpixxl/movix4webos/actions/workflows/release.yml/badge.svg" alt="Build Status"></a>
+  <img src="https://img.shields.io/badge/webOS-4.0%20%C3%A0%2024%2B-0083ca?logo=lg&logoColor=white" alt="Compatibilité webOS">
+  <img src="https://img.shields.io/badge/Homebrew_Channel-Compatible-10b981?logo=apple&logoColor=white" alt="Homebrew Channel Ready">
+  <img src="https://img.shields.io/badge/OLED-Optimized%20Dark%20UI-black" alt="OLED Optimized">
+  <img src="https://img.shields.io/badge/Licence-CC--BY--NC--4.0-lightgrey.svg" alt="Licence">
+</p>
 
 ---
 
-## 🎯 Fonctionnalités Principales
+## 🎯 Points Forts & Fonctionnalités
 
-- **Résolution dynamique automatique** : Au lancement, l'application interroge en temps réel `https://movix.online` pour découvrir et charger le miroir officiel actif (actuellement `https://movix.dog`), avec bascule de secours si le domaine change.
-- **Plein Écran Direct (Native Hardware Video)** : Navigue le moteur Chromium de webOS vers l'instance active. Aucun blocage d'iframe sur les lecteurs tiers (HLS/DASH/WASM), avec accélération matérielle GPU activée.
-- **Télécommande LG Magic Remote & D-Pad** :
-  - Touche **Retour (Back - 461 / GoBack / Escape)** gérée nativement pour fermer les lecteurs/modals ou quitter l'app via `PalmSystem.platformBack()`.
-  - Touches multimédia : **Lecture / Pause (415 / 19)**, avance/retour rapide.
-  - Raccourcis couleur : **Jaune (405)** pour les paramètres de miroir, **Rouge (403)** pour actualiser.
-- **Optimisation Dalle OLED & Lisibilité 3 mètres (10-foot UI)** :
-  - Thème sombre à fort contraste pour éviter tout marquage et offrir des noirs parfaits.
-  - Halo lumineux et zoom au survol pour le pointeur gyroscopique de la Magic Remote.
-  - Suppression automatique des barres de défilement pour un rendu épuré type application native.
+- **🔄 Résolution dynamique d'instance** : Au démarrage, l'application interroge automatiquement l'infrastructure Movix pour détecter et basculer sur le miroir actif (`movix.dog`, etc.), avec gestion de secours si l'adresse change.
+- **🛡️ Bloqueur de publicités & Bypass Ad-Free natif** :
+  - Déblocage automatique du mode VIP dans l'application Movix pour supprimer le prompt *"Cliquer sur une pub"* et charger les lecteurs vidéo immédiatement.
+  - Neutralisation des popups et popunders externes (`window.open`).
+  - Suppression automatique des calques invisibles de click-jacking et auto-skip des annonces de lecteurs.
+- **🛑 Protection Anti-Crash webOS** : Neutralisation de `window.close()` et `Window.prototype.close` pour empêcher les régies externes de tuer brutalement l'application TV.
+- **🎮 Support Complet Magic Remote & D-Pad** :
+  - **Molette (Scroll Wheel)** : Défilement vertical fluide sur les listes et défilement horizontal automatique sur les carrousels de films.
+  - **Flèches directionnelles (D-Pad)** : Navigation prédictive case par case pour une utilisation confortable même sans pointeur gyroscopique.
+  - **Sécurité Sortie "Double-Tap"** : Un toast discret avertit l'utilisateur avant de quitter, évitant toute fermeture accidentelle du film.
+- **📺 Optimisé Dalle OLED (10-Foot UI)** : Thème noir absolu `#000000`, halo rouge `#dc2626` haute visibilité à 3 mètres et accélération matérielle GPU activée.
 
 ---
 
-## 📁 Structure du Projet
+## 🎮 Tableau des Commandes Télécommande
+
+| Touche Télécommande | Action dans Movix TV |
+| :--- | :--- |
+| **Pointeur / Gyroscope** | Navigation fluide et zoom avec halo au survol des affiches de films |
+| **Roulette (Scroll Wheel)** | Défilement vertical des catalogues et horizontal des carrousels |
+| **Flèches D-Pad (Haut/Bas/Gauche/Droite)** | Navigation spatiale case par case avec surbrillance rouge nette |
+| **OK / Molette Clic** | Valider, ouvrir la fiche du film ou lancer la lecture |
+| **Touche Retour (Back - 461)** | **1.** Quitter plein écran ➔ **2.** Fermer modal ➔ **3.** Page précédente ➔ **4.** Double-tap pour quitter |
+| **Lecture / Pause (415 / 19)** | Mettre en pause ou relancer la vidéo en cours |
+| **Touches Chaîne (+/-)** | Défilement rapide d'une page vers le haut ou le bas |
+| **Bouton Jaune (405)** | Accès direct aux paramètres et sélection manuelle du miroir |
+| **Bouton Rouge (403)** | Recharger l'application ou actualiser la page |
+
+---
+
+## 🚀 Méthodes d'Installation
+
+### Option 1 : Via webOS Dev Manager (Recommandé sur PC / Mac)
+
+1. Téléchargez et lancez **[webOS Dev Manager](https://github.com/webosbrew/dev-manager-desktop/releases)**.
+2. Connectez-vous à votre téléviseur LG.
+3. Glissez-déposez le paquet **[`com.movix.client_1.0.4_all.ipk`](com.movix.client_1.0.4_all.ipk)** dans la fenêtre de webOS Dev Manager.
+4. L'application **Movix TV** apparaît instantanément dans la barre d'accueil de votre téléviseur !
+
+---
+
+### Option 2 : Via Homebrew Channel (Dépôt officiel personnalisé)
+
+Ajoutez directement ce dépôt comme source dans **Homebrew Channel** pour bénéficier des mises à jour en un clic depuis votre TV :
+
+1. Sur votre téléviseur LG, ouvrez **Homebrew Channel**.
+2. Rendez-vous dans **Paramètres** (icône roue crantée) ➔ **Repositories** ➔ **Add repository**.
+3. Saisissez l'URL officielle du flux :
+   ```text
+   https://raw.githubusercontent.com/notpixxl/movix4webos/main/apps.json
+   ```
+4. Cliquez sur **Valider** : **Movix TV** apparaît dans le catalogue d'applications de votre téléviseur.
+
+---
+
+## 📁 Architecture Technique
 
 ```text
 movix-webos/
-├── appinfo.json           # Manifeste officiel de l'application webOS
-├── index.html             # Lanceur TV OLED, résolution dynamique et OSD
-├── app.js                 # Moteur de résolution de miroir et contrôleur TV
-├── style.css              # Design System sombre 10-foot UI optimisé OLED
-├── tv-styles.css          # Styles d'agrandissement, contraste et focus curseur
-├── tv-adapter.js          # Adaptateur télécommande Magic Remote & touches TV
-├── icon.png               # Icône webOS (80×80)
-├── largeIcon.png          # Grande icône pour le lanceur webOS (130×130)
-├── movix.svg              # Logo officiel vectoriel
-├── apps.json              # Flux de catalogue pour Homebrew Channel
-├── manifest.json          # Manifeste d'installation Homebrew Channel
-├── webosbrew.json         # Métadonnées officielles webosbrew
-├── package.ps1            # Script local de packaging IPK (Windows)
-├── package.json           # Descripteur de projet standard
-├── .github/workflows/     # Compilation automatique CI/CD et releases GitHub
-└── com.movix.client_...ipk # Paquet IPK prêt à installer
+├── appinfo.json                   # Manifeste officiel de l'application webOS
+├── index.html                     # Écran de démarrage OLED et résolveur dynamique
+├── app.js                         # Moteur de résolution rapide et bascule de miroir
+├── style.css                      # Design System sombre OLED
+├── tv-styles.css                  # Styles TV (halo lumineux, contraste, scrollbars)
+├── tv-adapter.js                  # Adaptateur matériel télécommande LG webOS
+├── webOSUserScripts/
+│   └── userScript.js              # Script d'injection globale (Anti-crash, AdBlock, D-Pad, Molette)
+├── icon.png                       # Icône d'application (80×80)
+├── largeIcon.png                  # Grande icône pour le Home Launcher LG (130×130)
+├── movix.svg                      # Logo officiel vectoriel
+├── apps.json                      # Flux catalogue pour Homebrew Channel
+├── manifest.json                  # Descripteur de paquet pour webOS
+├── webosbrew.json                 # Métadonnées webosbrew
+├── package.ps1                    # Script de compilation IPK Unix ar (Windows)
+└── .github/workflows/
+    ├── ci.yml                     # Validation et tests de compilation continus
+    └── release.yml                # Compilation automatique et publication de release
 ```
 
 ---
 
-## 🚀 Méthodes de Déploiement
+## ⚙️ Compilation Manuelle (PowerShell)
 
-### Méthode 1 : Via webOS Dev Manager (Simple & Rapide)
+Pour compiler vous-même le paquet `.ipk` sans installer le SDK LG :
 
-1. Téléchargez et ouvrez **webOS Dev Manager** sur votre ordinateur.
-2. Connectez-vous à votre téléviseur LG.
-3. Cliquez sur **Install** (ou glissez-déposez le fichier [`com.movix.client_1.0.3_all.ipk`](com.movix.client_1.0.3_all.ipk) dans la fenêtre).
-4. L'application s'installe et l'icône **Movix TV** apparaît instantanément dans la barre de lancement de votre téléviseur.
+```powershell
+powershell -ExecutionPolicy Bypass -File .\package.ps1
+```
 
----
-
-### Méthode 2 : Via Homebrew Channel (Ajouter ce repo comme source)
-
-Vous pouvez ajouter ce dépôt comme source personnalisée directement dans **Homebrew Channel** sur votre TV :
-
-1. Dépôt officiel GitHub : [https://github.com/notpixxl/movix4webos](https://github.com/notpixxl/movix4webos)
-2. Sur votre téléviseur LG, ouvrez **Homebrew Channel**.
-3. Allez dans les **Paramètres** (icône d'engrenage en haut à droite) ➔ **Repositories** ➔ **Add repository**.
-4. Entrez l'URL directe vers votre fichier `apps.json` :
-   ```text
-   https://raw.githubusercontent.com/notpixxl/movix4webos/main/apps.json
-   ```
-5. Validez : l'application **Movix TV** apparaît dans le catalogue Homebrew Channel de votre téléviseur avec installation et mises à jour en 1 clic !
-
-> **Astuce d'automatisation GitHub** : Le workflow [`.github/workflows/release.yml`](.github/workflows/release.yml) inclus compile automatiquement le paquet IPK et met à jour le fichier `apps.json` à chaque mise à jour sur votre dépôt GitHub.
+Le script produit automatiquement le conteneur Debian `ar` autonome et met à jour les empreintes SHA256 des flux de distribution.
 
 ---
 
-## 🎨 Focus Curseur & Confort Visuel
+## 📄 Licence & Mentions Légales
 
-Le fichier [`tv-styles.css`](tv-styles.css) applique les règles ergonomiques suivantes :
-
-1. **Aura lumineuse et grossissement au survol (Magic Remote)** :
-   Sur un grand écran à 3 mètres, le curseur gyroscopique applique un `transform: scale(1.06)` avec halo rouge (`box-shadow: 0 0 20px rgba(220, 38, 38, 0.5)`) sur chaque affiche de film et bouton.
-
-2. **Mise en valeur du focus D-Pad (`:focus-visible`)** :
-   Un contour épais de 3px (`outline: 3px solid #dc2626 !important; outline-offset: 4px;`) permet de savoir immédiatement quel élément est actif lors de la navigation avec les flèches directionnelles.
-
-3. **Masquage des barres de défilement** :
-   La règle `*::-webkit-scrollbar { display: none !important; }` élimine les ascenseurs visuels tout en conservant le défilement fluide au pointeur ou à la molette.
-
-4. **Réglage recommandé sur votre téléviseur LG** :
-   - Allez dans : **Tous les paramètres > Accessibilité > Options du pointeur**.
-   - Réglez la **Vitesse de suivi** sur *Moyenne* et la **Taille du pointeur** sur *Grande*.
+Projet communautaire à but éducatif. Distribué sous licence **CC-BY-NC 4.0** (Attribution - Pas d'Utilisation Commerciale).
+Les flux et contenus multimédias restent la propriété exclusive de leurs ayants droit respectifs.

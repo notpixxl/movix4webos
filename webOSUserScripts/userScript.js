@@ -1,5 +1,5 @@
 /**
- * Movix TV for LG webOS - UserScript d'injection globale (v1.0.3)
+ * Movix TV for LG webOS - UserScript d'injection globale (v1.0.4)
  * Injecté automatiquement par le moteur webOS Chromium dans toutes les pages et iframes
  *
  * Fonctionnalités :
@@ -7,7 +7,9 @@
  * 2. Bypass Auto-VIP & Ad-Free : Neutralise le prompt "cliquer sur une pub" en débloquant le mode AdFree natif
  * 3. Bloqueur de pubs (AdBlock) : Popups factices, blocage des régies, calques transparents et auto-skip
  * 4. Défilement Magic Remote : Molette fluide verticale et carrousels horizontaux (validé)
- * 5. Gestion sécurisée de la télécommande : Découplage strict Escape / Touche Retour (461)
+ * 5. Navigation D-Pad complète : Prise en charge des flèches directionnelles et focus visuel
+ * 6. Sécurité Sortie Double-Tap : Toast d'avertissement évitant les fermetures intempestives
+ * 7. Gestion multimédia sécurisée : Découplage strict Escape / Touche Retour (461)
  */
 
 (function () {
@@ -16,7 +18,7 @@
   if (window.__MOVIX_TV_INJECTED__) return;
   window.__MOVIX_TV_INJECTED__ = true;
 
-  console.log('[MovixTV UserScript v1.0.3] Initialisation sur :', window.location.href);
+  console.log('[MovixTV UserScript v1.0.4] Initialisation sur :', window.location.href);
 
   var noop = function () {};
 
@@ -75,7 +77,7 @@
   /* ====================================================================
    * 2. BYPASS AUTO-VIP & AD-FREE (Supprime le prompt "Cliquer sur une pub")
    * ====================================================================
-   * Movix embarque un AdFreePopupContext qui vérifie le flag 'is_vip' et
+   * Movix embarque un AdFreePopupContext qui vérifie les flags 'is_vip' et
    * 'adWarningAccepted' dans localStorage.
    * Si 'is_vip' n'est pas présent, il bloque l'affichage de l'iframe du lecteur
    * et affiche une fenêtre modale invitant l'utilisateur à cliquer sur une pub.
@@ -83,12 +85,10 @@
    */
 
   try {
-    // 1. Initialisation dans le localStorage du domaine
     localStorage.setItem('is_vip', 'true');
     localStorage.setItem('adWarningAccepted', 'true');
     localStorage.setItem('adfree_unlocked', 'true');
 
-    // 2. Interception de Storage.prototype.getItem pour garantir 'true' même en cas de reset
     var rawGetItem = Storage.prototype.getItem;
     Storage.prototype.getItem = function (key) {
       if (key === 'is_vip' || key === 'adWarningAccepted' || key === 'adfree_unlocked') {
@@ -97,7 +97,6 @@
       return rawGetItem.apply(this, arguments);
     };
 
-    // 3. Notification des composants React de Movix
     window.dispatchEvent(new CustomEvent('vipStatusChanged'));
     window.dispatchEvent(new CustomEvent('ad_popup_accepted', { detail: { timestamp: Date.now() } }));
   } catch (e) {}
@@ -107,7 +106,6 @@
    * 3. MODULE ADBLOCK : Popups factices, régies et calques invisibles
    * ==================================================================== */
 
-  // Objet Window factice retourné aux scripts publicitaires pour éviter tout plantage TypeError
   var dummyWindow = {
     closed: true,
     name: 'ad_dummy',
@@ -129,7 +127,6 @@
     }
   };
 
-  // Liste noire des régies publicitaires et réseaux de popups de streaming
   var AD_PATTERNS = [
     'adsterra', 'popads', 'popcash', 'propellerads', 'monetag', 'exoclick',
     'adcash', 'hilltopads', 'clickadu', 'admaven', 'bidgear', 'adtrue',
@@ -157,7 +154,6 @@
       var strUrl = String(url);
       try {
         var parsed = new URL(strUrl, window.location.href);
-        // N'autoriser que les navigations légitimes au sein de Movix
         if (parsed.hostname.indexOf('movix') !== -1 || parsed.hostname === window.location.hostname) {
           window.location.href = strUrl;
           return window;
@@ -313,13 +309,160 @@
 
 
   /* ====================================================================
-   * 5. GESTION SÉCURISÉE DES TOUCHES TÉLÉCOMMANDE (Fix Crash)
+   * 5. MODULE NAVIGATION SPATIALE D-PAD (Flèches Haut/Bas/Gauche/Droite)
+   * ==================================================================== */
+
+  function getFocusableElements() {
+    var selector = [
+      'a[href]', 'button:not([disabled])', 'input:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])', '[role="button"]',
+      '.movie-card', '.card', '[class*="card"]', '[class*="poster"]'
+    ].join(',');
+    var elements = Array.prototype.slice.call(document.querySelectorAll(selector));
+    return elements.filter(function (el) {
+      if (el.offsetParent === null) return false;
+      var r = el.getBoundingClientRect();
+      return r.width > 20 && r.height > 20;
+    });
+  }
+
+  function handleSpatialMove(direction) {
+    var focusables = getFocusableElements();
+    if (focusables.length === 0) return false;
+
+    var active = document.activeElement;
+    if (!active || active === document.body || active === document.documentElement || focusables.indexOf(active) === -1) {
+      // Aucun élément actif : cibler le premier élément visible à l'écran
+      for (var i = 0; i < focusables.length; i++) {
+        var rect = focusables[i].getBoundingClientRect();
+        if (rect.top >= 0 && rect.top <= window.innerHeight * 0.8 && rect.left >= 0 && rect.left <= window.innerWidth) {
+          focusables[i].focus();
+          focusables[i].scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+          return true;
+        }
+      }
+      focusables[0].focus();
+      return true;
+    }
+
+    var curRect = active.getBoundingClientRect();
+    var bestTarget = null;
+    var bestScore = Infinity;
+
+    for (var j = 0; j < focusables.length; j++) {
+      var cand = focusables[j];
+      if (cand === active) continue;
+      var cRect = cand.getBoundingClientRect();
+
+      var isCandidate = false;
+      var primaryDist = 0;
+      var secondaryDist = 0;
+
+      if (direction === 'up' && cRect.bottom <= curRect.top + 20) {
+        isCandidate = true;
+        primaryDist = curRect.top - cRect.bottom;
+        secondaryDist = Math.abs((curRect.left + curRect.width / 2) - (cRect.left + cRect.width / 2));
+      } else if (direction === 'down' && cRect.top >= curRect.bottom - 20) {
+        isCandidate = true;
+        primaryDist = cRect.top - curRect.bottom;
+        secondaryDist = Math.abs((curRect.left + curRect.width / 2) - (cRect.left + cRect.width / 2));
+      } else if (direction === 'left' && cRect.right <= curRect.left + 20) {
+        isCandidate = true;
+        primaryDist = curRect.left - cRect.right;
+        secondaryDist = Math.abs((curRect.top + curRect.height / 2) - (cRect.top + cRect.height / 2));
+      } else if (direction === 'right' && cRect.left >= curRect.right - 20) {
+        isCandidate = true;
+        primaryDist = cRect.left - curRect.right;
+        secondaryDist = Math.abs((curRect.top + curRect.height / 2) - (cRect.top + cRect.height / 2));
+      }
+
+      if (isCandidate) {
+        // Privilégier les alignements naturels de grille
+        var score = primaryDist + (secondaryDist * 2.5);
+        if (score < bestScore) {
+          bestScore = score;
+          bestTarget = cand;
+        }
+      }
+    }
+
+    if (bestTarget) {
+      bestTarget.focus();
+      bestTarget.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      return true;
+    }
+    return false;
+  }
+
+
+  /* ====================================================================
+   * 6. NOTIFICATION TOAST OLED & SÉCURITÉ DE SORTIE DOUBLE-TAP
+   * ==================================================================== */
+
+  function showToast(message, duration) {
+    duration = duration || 2200;
+    var existing = document.getElementById('movix-tv-toast');
+    if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+    var toast = document.createElement('div');
+    toast.id = 'movix-tv-toast';
+    toast.textContent = message;
+    toast.style.cssText = [
+      'position: fixed !important',
+      'bottom: 45px !important',
+      'left: 50% !important',
+      'transform: translateX(-50%) !important',
+      'background: rgba(10, 12, 16, 0.94) !important',
+      'color: #ffffff !important',
+      'padding: 14px 30px !important',
+      'border-radius: 9999px !important',
+      'font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important',
+      'font-size: 17px !important',
+      'font-weight: 600 !important',
+      'letter-spacing: 0.4px !important',
+      'box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(220, 38, 38, 0.45) !important',
+      'border: 1.5px solid rgba(220, 38, 38, 0.7) !important',
+      'z-index: 2147483647 !important',
+      'pointer-events: none !important',
+      'transition: opacity 0.3s ease !important',
+      'opacity: 1 !important'
+    ].join(';');
+
+    (document.body || document.documentElement).appendChild(toast);
+    setTimeout(function () {
+      toast.style.opacity = '0';
+      setTimeout(function () {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 350);
+    }, duration);
+  }
+
+  var lastBackPressTime = 0;
+
+  function handleSafeAppExit() {
+    var now = Date.now();
+    if (now - lastBackPressTime < 2400) {
+      console.log('[MovixTV] Double-tap confirmé : sortie propre de l\'application');
+      if (window.PalmSystem && window.PalmSystem.platformBack) {
+        window.PalmSystem.platformBack();
+      } else if (window.webOS && window.webOS.platformBack) {
+        window.webOS.platformBack();
+      }
+    } else {
+      lastBackPressTime = now;
+      showToast('Appuyez à nouveau sur Retour pour quitter');
+    }
+  }
+
+
+  /* ====================================================================
+   * 7. GESTION DES TOUCHES TÉLÉCOMMANDE (D-Pad, Retour, Multimédia)
    * ==================================================================== */
 
   window.addEventListener('keydown', function (e) {
     var key = e.keyCode || e.which;
 
-    // A. Touche ECHAP (27) : Ne JAMAIS fermer l'application webOS
+    // A. Touche ECHAP (27) : Ne jamais fermer l'application
     if (key === 27) {
       if (document.fullscreenElement || document.webkitFullscreenElement) {
         if (document.exitFullscreen) document.exitFullscreen();
@@ -340,30 +483,43 @@
       }
 
       // 2. Fermer un modal ou dialogue ouvert
-      var closeBtn = document.querySelector('button[aria-label="Close"], .close-modal, .btn-close');
-      if (closeBtn) {
+      var closeBtn = document.querySelector('button[aria-label="Close"], .close-modal, .btn-close, [data-dismiss="modal"]');
+      if (closeBtn && closeBtn.offsetParent !== null) {
         closeBtn.click();
         return;
       }
 
-      // 3. Navigation d'historique (Retour aux fiches ou catalogue)
-      if (window.history && window.history.length > 1) {
+      // 3. Navigation d'historique (Retour en arrière si sur une fiche ou recherche)
+      if (window.history && window.history.length > 1 && window.location.pathname !== '/' && window.location.pathname !== '') {
         window.history.back();
-      } else {
-        // Uniquement si on est sur la page d'accueil racine
-        if (window.location.pathname === '/' || window.location.pathname === '') {
-          if (window.PalmSystem && window.PalmSystem.platformBack) {
-            window.PalmSystem.platformBack();
-          }
-        } else {
-          // Revenir à l'accueil Movix
-          window.location.href = '/';
-        }
+        return;
       }
+
+      // 4. Si sur l'accueil ou en début d'historique -> Double-tap sécurisé
+      handleSafeAppExit();
       return;
     }
 
-    // C. Touche Play / Pause (415 / 19)
+    // C. Touches Directionnelles D-Pad (Flèches Télécommande)
+    if (key === 38) { // Haut
+      if (handleSpatialMove('up')) e.preventDefault();
+    } else if (key === 40) { // Bas
+      if (handleSpatialMove('down')) e.preventDefault();
+    } else if (key === 37) { // Gauche
+      if (handleSpatialMove('left')) e.preventDefault();
+    } else if (key === 39) { // Droite
+      if (handleSpatialMove('right')) e.preventDefault();
+    } else if (key === 13) { // OK / Entrée
+      var active = document.activeElement;
+      if (active && active !== document.body && active !== document.documentElement) {
+        // Laisser les champs de saisie ouverts pour le clavier virtuel
+        if (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA') {
+          active.click();
+        }
+      }
+    }
+
+    // D. Touche Play / Pause (415 / 19)
     if (key === 415 || key === 19) {
       var video = document.querySelector('video');
       if (video) {
@@ -373,7 +529,7 @@
       return;
     }
 
-    // D. Touches Chaîne +/- (Channel Up 33 / Down 34) : Défilement par page
+    // E. Touches Chaîne +/- (Channel Up 33 / Down 34) : Défilement par page
     if (key === 33) {
       window.scrollBy({ top: -window.innerHeight * 0.7, behavior: 'smooth' });
     } else if (key === 34) {
@@ -383,7 +539,7 @@
 
 
   /* ====================================================================
-   * 6. INJECTION DES STYLES TV (Lisibilité, Focus et Scrollbars)
+   * 8. INJECTION DES STYLES TV (OLED, Lisibilité, Focus et Scrollbars)
    * ==================================================================== */
 
   var tvStyles = document.createElement('style');
@@ -392,7 +548,7 @@
     '::-webkit-scrollbar { width: 8px !important; height: 8px !important; display: block !important; }',
     '::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.4) !important; }',
     '::-webkit-scrollbar-thumb { background: #dc2626 !important; border-radius: 4px !important; }',
-    ':focus, :focus-visible { outline: 3px solid #dc2626 !important; outline-offset: 3px !important; }',
+    ':focus, :focus-visible, .tv-dpad-focus { outline: 3.5px solid #dc2626 !important; outline-offset: 4px !important; box-shadow: 0 0 18px rgba(220, 38, 38, 0.7) !important; transition: outline 0.15s ease, box-shadow 0.15s ease !important; }',
     'a:hover img, .card:hover, .movie-card:hover { transform: scale(1.05) !important; transition: transform 0.2s ease !important; }',
     'iframe[src*="ads"], div[class*="banner"], div[id*="ad-"], .ad-slot, .popunder { display: none !important; width: 0 !important; height: 0 !important; }'
   ].join('\n');
@@ -405,5 +561,5 @@
     });
   }
 
-  console.log('[MovixTV UserScript] Prêt (Protections anti-crash et Auto-VIP activées)');
+  console.log('[MovixTV UserScript] Prêt (v1.0.4 - Double-tap & D-Pad activés)');
 })();

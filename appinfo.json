@@ -1,6 +1,6 @@
 {
   "id": "com.movix.client",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "vendor": "Movix Community",
   "type": "web",
   "main": "index.html",
