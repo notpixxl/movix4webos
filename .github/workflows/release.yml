@@ -29,15 +29,8 @@ jobs:
           
           printf "2.0\n" > staging/debian-binary
           
-          cat << EOF > staging/control/control
-Package: ${APP_ID}
-Version: ${VERSION}
-Section: misc
-Priority: optional
-Architecture: all
-Maintainer: Movix Community
-Description: Movix TV streaming client for webOS
-EOF
+          printf "Package: %s\nVersion: %s\nSection: misc\nPriority: optional\nArchitecture: all\nMaintainer: Movix Community\nDescription: Movix TV streaming client for webOS\n" "${APP_ID}" "${VERSION}" > staging/control/control
+
           
           # Copy app files
           cp appinfo.json index.html app.js style.css tv-styles.css tv-adapter.js icon.png largeIcon.png movix.svg staging/data/usr/palm/applications/${APP_ID}/
